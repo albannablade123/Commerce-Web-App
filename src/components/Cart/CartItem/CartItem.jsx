@@ -1,10 +1,18 @@
-import React from 'react'
+import React , {useEffect, useState } from 'react'
 import { Typography, Button, Card, CardActions, CardMedia, CardContent } from '@material-ui/core';
 
 import useStyles from './styles';
 
 const CartItem = ({ item, onUpdateCartQty, onRemoveFromCart }) => {
     const classes = useStyles();
+
+    const [itemQuantity, setItemQuantity] = useState(0);
+
+    useEffect(() => {
+      setItemQuantity(item.quantity);
+    
+    }, [onUpdateCartQty])
+    
 
   return (
     <Card>
@@ -16,7 +24,7 @@ const CartItem = ({ item, onUpdateCartQty, onRemoveFromCart }) => {
         <CardActions classes={classes.CardActions}>
             <div className={classes.buttons}>
                 <Button type='button' size='small' onClick={() => onUpdateCartQty(item.id, item.quantity - 1)}>-</Button>
-                <Typography>{item.quantity}</Typography>
+                <Typography>{itemQuantity}</Typography>
                 <Button type='button' className={classes.emptyButton} size='small' onClick={() => onUpdateCartQty(item.id, item.quantity + 1)}>+</Button>
                 <Button variant="contained" className={classes.checkoutButton} to="/checkout" type="button" color="secondary" onClick={() => onRemoveFromCart(item.id)}>Remove</Button>
             </div>
