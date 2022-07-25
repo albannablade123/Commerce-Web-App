@@ -4,10 +4,11 @@ import useStyles from './styles';
 import { commerce } from '../../../lib/commerce';
 import AddressForm from './AddressForm';
 import PaymentForm from './PaymentForm';
+import { Link } from 'react-router-dom';
 
 
 const steps = ['Shipping adress','Payment details'];
-const Checkout = ({ cart, order, errorMessage, onCaptureCheckout }) => {
+const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
     const [activeStep, setActiveStep] = useState(0);
     const [checkoutToken, setCheckoutToken] = useState(null);
     const [shippingData, setShippingData] = useState({})
@@ -19,6 +20,7 @@ const Checkout = ({ cart, order, errorMessage, onCaptureCheckout }) => {
                 const token = await commerce.checkout.generateToken(cart.id, { type: 'cart'});
                 setCheckoutToken(token);
             } catch (error) {
+                console.log(error);
                 
             }
         }
@@ -36,11 +38,34 @@ const Checkout = ({ cart, order, errorMessage, onCaptureCheckout }) => {
         nextStep();
     }
 
-    const Confirmation = () => (
-        <div>
-            Confirmation
+    const Confirmation = () => order.customer ? (
+        <>
+             <div>
+            <Typography variant='h5'>
+                Thank You For Your Purchase, {order.customer.firstname} {order.customer.lastname}
+                <Divider className={classes.Divider}/>
+                <Typography variant='subtitle2' >
+                    Order Ref: Ref {order.customer_reference}
+                </Typography>
+            </Typography>
+        </div>
+        <br/>
+        <Button variant='outlined' component={Link} to='/'>Return to Home</Button>
+        </>
+       
+    ): (
+        <div className={classes.spinner}>
+            <CircularProgress/>
+
         </div>
     );
+
+    if (error) {
+        <>
+            <Typography varian='h5'> Error: {error} </Typography>
+            <Button variant='outlined' component={Link} to='/'>Return to Home</Button>
+        </>
+    }
 
     const Form = () => activeStep === 0 
     ? <AddressForm checkoutToken={checkoutToken} next={next}/>
