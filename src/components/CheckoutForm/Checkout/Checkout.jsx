@@ -1,18 +1,20 @@
 import React, { useState, useEffect }from 'react'
-import { Paper, Stepper, Step, StepLabel, Typography, CircularProgress, Divider, Button } from '@material-ui/core';
+import { Paper, Stepper, Step, StepLabel, Typography, CircularProgress, Divider, Button, CssBaseline } from '@material-ui/core';
 import useStyles from './styles';
 import { commerce } from '../../../lib/commerce';
 import AddressForm from './AddressForm';
 import PaymentForm from './PaymentForm';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 const steps = ['Shipping adress','Payment details'];
 const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
     const [activeStep, setActiveStep] = useState(0);
     const [checkoutToken, setCheckoutToken] = useState(null);
-    const [shippingData, setShippingData] = useState({})
+    const [shippingData, setShippingData] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
     const classes = useStyles();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const generateToken = async () => {
@@ -20,7 +22,7 @@ const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
                 const token = await commerce.checkout.generateToken(cart.id, { type: 'cart'});
                 setCheckoutToken(token);
             } catch (error) {
-                console.log(error);
+                navigate.pushState('/');
                 
             }
         }
@@ -28,6 +30,10 @@ const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
 
         generateToken();
     }, [cart])
+
+    const timeout = () => {
+        setTimeout(() => {setIsLoading(true)}, 3000);
+    }
 
     const nextStep = () => setActiveStep((prevActiveStep) => prevActiveStep + 1);
 
@@ -40,20 +46,41 @@ const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
 
     const Confirmation = () => order.customer ? (
         <>
+        <CssBaseline/>
              <div>
             <Typography variant='h5'>
-                Thank You For Your Purchase, {order.customer.firstname} {order.customer.lastname}
+            Thank You For Your Purchase, {order.customer.firstname} {order.customer.lastname}
+            </Typography>
+                
                 <Divider className={classes.Divider}/>
                 <Typography variant='subtitle2' >
-                    Order Ref: Ref {order.customer_reference}
-                </Typography>
+                    Order Ref: Ref {order.customer_reference} 
             </Typography>
         </div>
         <br/>
         <Button variant='outlined' component={Link} to='/'>Return to Home</Button>
         </>
        
-    ): (
+    ): isLoading ? (
+
+        <>
+        <CssBaseline/>
+             <div>
+            <Typography variant='h5'>
+            Thank You For Your Purchase, Customer
+            </Typography>
+                
+                <Divider className={classes.Divider}/>
+                <Typography variant='subtitle2' >
+                    Order Ref: Ref 492040529
+            </Typography>
+        </div>
+        <br/>
+        <Button variant='outlined' component={Link} to='/'>Return to Home</Button>
+        </>
+
+
+    ) : (
         <div className={classes.spinner}>
             <CircularProgress/>
 
@@ -69,7 +96,7 @@ const Checkout = ({ cart, order, error, onCaptureCheckout }) => {
 
     const Form = () => activeStep === 0 
     ? <AddressForm checkoutToken={checkoutToken} next={next}/>
-    : <PaymentForm checkoutToken={checkoutToken} backStep={backStep} nextStep={nextStep} shippingData={shippingData} onCaptureCheckout={onCaptureCheckout}/>
+    : <PaymentForm checkoutToken={checkoutToken} backStep={backStep} nextStep={nextStep} shippingData={shippingData} timeout={timeout} onCaptureCheckout={onCaptureCheckout}/>
 
   return (
     <>
